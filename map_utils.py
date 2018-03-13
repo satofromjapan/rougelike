@@ -1,5 +1,14 @@
+from tdl.map import Map
+
 from random import randint
 
+# Map subclass to remember explored areas of the map
+class GameMap(Map):
+    def __init__(self, width, height):
+        super().__init__(width, height)
+        self.explored = [[False for y in range(height)] for x in range(width)]
+
+# Class for basic room construction
 class Rect:
     def __init__(self, x, y, w, h):
         self.x1 = x
