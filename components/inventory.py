@@ -1,5 +1,6 @@
 from game_messages import Message
 
+
 class Inventory:
     def __init__(self, capacity):
         self.capacity = capacity
@@ -11,7 +12,7 @@ class Inventory:
         if len(self.items) >= self.capacity:
             results.append({
                 'item_added': None,
-                'message': Message('You cannot carry anymore, your inventory is full', colors.get('yellow'))
+                'message': Message('You cannot carry any more, your inventory is full', colors.get('yellow'))
             })
         else:
             results.append({

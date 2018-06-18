@@ -12,10 +12,6 @@ from render_functions import clear_all, render_all, RenderOrder
 
 
 def main():
-
-    ###
-    # Various Variables
-    ###
     screen_width = 80
     screen_height = 50
 
@@ -63,36 +59,22 @@ def main():
         'light_pink': (255, 114, 184)
     }
 
-    ###
-    # Create some entities
-    ###
-
     fighter_component = Fighter(hp=30, defense=2, power=5)
     inventory_component = Inventory(26)
     player = Entity(0, 0, '@', (255, 255, 255), 'Player', blocks=True, render_order=RenderOrder.ACTOR,
                     fighter=fighter_component, inventory=inventory_component)
     entities = [player]
 
-    ###
-    # Font file
-    ###
     tdl.set_font('arial10x10.png', greyscale=True, altLayout=True)
 
-    ###
-    # Console info
-    ###
     root_console = tdl.init(screen_width, screen_height, title='Roguelike Tutorial Revised')
     con = tdl.Console(screen_width, screen_height)
     panel = tdl.Console(screen_width, panel_height)
 
-    ###
-    # Map Initialization
-    ###
     game_map = GameMap(map_width, map_height)
     make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
              max_monsters_per_room, max_items_per_room, colors)
 
-    # Flag for fov
     fov_recompute = True
 
     message_log = MessageLog(message_x, message_width, message_height)
@@ -104,16 +86,12 @@ def main():
 
     targeting_item = None
 
-    ###
-    # Start of game loop
-    ###
     while not tdl.event.is_window_closed():
         if fov_recompute:
             game_map.compute_fov(player.x, player.y, fov=fov_algorithm, radius=fov_radius, light_walls=fov_light_walls)
 
         render_all(con, panel, entities, player, game_map, fov_recompute, root_console, message_log, screen_width,
                    screen_height, bar_width, panel_height, panel_y, mouse_coordinates, colors, game_state)
-
         tdl.flush()
 
         clear_all(con, entities)
@@ -129,7 +107,6 @@ def main():
             elif event.type == 'MOUSEDOWN':
                 user_mouse_input = event
                 break
-
         else:
             user_input = None
             user_mouse_input = None
@@ -178,9 +155,8 @@ def main():
                     player_turn_results.extend(pickup_results)
 
                     break
-
-                else:
-                    message_log.add_message(Message('There is nothing here to pick up.', colors.get('yellow')))
+            else:
+                message_log.add_message(Message('There is nothing here to pick up.', colors.get('yellow')))
 
         if show_inventory:
             previous_game_state = game_state
@@ -203,8 +179,7 @@ def main():
             if left_click:
                 target_x, target_y = left_click
 
-                item_use_results = player.inventory.use(targeting_item, colors, entities=entities, game_map=game_map,
-                                                        target_x=target_x, target_y=target_y)
+                item_use_results = player.inventory.use(targeting_item, colors, entities=entities, game_map=game_map, target_x=target_x, target_y=target_y)
                 player_turn_results.extend(item_use_results)
             elif right_click:
                 player_turn_results.append({'targeting_cancelled': True})
@@ -232,11 +207,6 @@ def main():
             if message:
                 message_log.add_message(message)
 
-            if targeting_cancelled:
-                game_state = previous_game_state
-
-                message_log.add_message(Message('Targeting cancelled'))
-
             if dead_entity:
                 if dead_entity == player:
                     message, game_state = kill_player(dead_entity, colors)
@@ -259,12 +229,17 @@ def main():
                 game_state = GameStates.ENEMY_TURN
 
             if targeting:
-                previouse_game_state = GameStates.PLAYERS_TURN
+                previous_game_state = GameStates.PLAYERS_TURN
                 game_state = GameStates.TARGETING
 
                 targeting_item = targeting
 
                 message_log.add_message(targeting_item.item.targeting_message)
+
+            if targeting_cancelled:
+                game_state = previous_game_state
+
+                message_log.add_message(Message('Targeting cancelled'))
 
         if game_state == GameStates.ENEMY_TURN:
             for entity in entities:
@@ -291,10 +266,6 @@ def main():
 
                     if game_state == GameStates.PLAYER_DEAD:
                         break
-
-                else:
-                    game_state = GameStates.PLAYERS_TURN
-
             else:
                 game_state = GameStates.PLAYERS_TURN
 

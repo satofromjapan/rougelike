@@ -107,5 +107,6 @@ def cast_confuse(*args, **kwargs):
             break
 
     else:
-         results.append({'consumed': False, 'message': Message('There is no targetable enemy at that location.',
-                                                               colors.get('yellow'))})
+        results.append({'consumed': False, 'message': Message('There is no targetable enemy at that location.', colors.get('yellow'))})
+        
+    return results
