@@ -5,6 +5,8 @@ from random import randint
 from components.ai import BasicMonster
 from components.fighter import Fighter
 from components.item import Item
+from components.stairs import Stairs
+
 from render_functions import RenderOrder
 
 from entity import Entity
@@ -15,9 +17,11 @@ from item_functions import cast_confuse, cast_fireball, cast_lightning, heal
 
 
 class GameMap(Map):
-    def __init__(self, width, height):
+    def __init__(self, width, height, dungeon_level=1):
         super().__init__(width, height)
         self.explored = [[False for y in range(height)] for x in range(width)]
+
+        self.dungeon_level = dungeon_level
 
 
 class Rect:
@@ -120,6 +124,9 @@ def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_h
     rooms = []
     num_rooms = 0
 
+    center_of_last_room_x = None
+    center_of_last_room_y = None
+
     for r in range(max_rooms):
         # random width and height
         w = randint(room_min_size, room_max_size)
@@ -143,6 +150,9 @@ def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_h
 
             # center coordinates of new room, will be useful later
             (new_x, new_y) = new_room.center()
+
+            center_of_last_room_x = new_x
+            center_of_last_room_y = new_y
 
             if num_rooms == 0:
                 # this is the first room, where the player starts at
@@ -170,3 +180,22 @@ def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_h
             # finally, append the new room to the list
             rooms.append(new_room)
             num_rooms += 1
+
+    stairs_component = Stairs(game_map.dungeon_level + 1)
+    down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', (255, 255, 255), 'Stairs', render_order=RenderOrder.STAIRS, stairs=stairs_component)
+    entities.append(down_stairs)
+
+
+def next_floor(player, message_log, dungeon_level, constants):
+    game_map = GameMap(constants['map_width'], constants['map_height'], dungeon_level)
+    entities =[player]
+
+    make_map(game_map, constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+             constants['map_width'], constants['map_height'], player, entities, constants['max_monsters_per_room'],
+             constants['max_items_per_room'], constants['colors'])
+
+    player.fighter.heal(player.fighter.max_hp // 2)
+
+    message_log.add_message(Message('You take a moment to rest and recover your strength.', constants['colors'].get('light_violet')))
+
+    return game_map, entities
