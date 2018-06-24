@@ -14,74 +14,6 @@ from menus import main_menu, message_box
 from render_functions import clear_all, render_all
 
 
-def main():
-    constants = get_constants()
-
-    tdl.set_font('arial10x10.png', greyscale=True, altLayout=True)
-
-    root_console = tdl.init(constants['screen_width'], constants['screen_height'], constants['window_title'])
-    con = tdl.Console(constants['screen_width'], constants['screen_height'])
-    panel = tdl.Console(constants['screen_width'], constants['panel_height'])
-
-    player = None
-    entities = []
-    game_map = None
-    message_log = None
-    game_state = None
-
-    show_main_menu = True
-    show_load_error_message = False
-
-    main_menu_background_image = image_load('menu_background1.png')
-
-    while not tdl.event.is_window_closed():
-        for event in tdl.event.get():
-            if event.type == 'KEYDOWN':
-                user_input = event
-                break
-        else:
-            user_input = None
-
-        if show_main_menu:
-            main_menu(con, root_console, main_menu_background_image, constants['screen_width'], constants['screen_height'], constants['colors'])
-
-            if show_load_error_message:
-                message_box(con, root_console, 'No save game to load', 50, constants['screen_width'], constants['screen_height'])
-
-            tdl.flush()
-
-            action = handle_main_menu(user_input)
-
-            new_game = action.get('new_game')
-            load_saved_game = action.get('load_game')
-            exit_game = action.get('exit')
-
-            if show_load_error_message and (new_game or load_saved_game or exit_game):
-                show_load_error_message = False
-            elif new_game:
-                player, entities, game_map, message_log, game_state = get_game_variables(constants)
-                game_state = GameStates.PLAYERS_TURN
-
-                show_main_menu = False
-
-            elif load_saved_game:
-                try:
-                    player, entities, game_map, message_log, game_state = load_game()
-                    show_main_menu = False
-                except FileNotFoundError:
-                    show_load_error_message = True
-            elif exit_game:
-                break
-
-        else:
-            root_console.clear()
-            con.clear()
-            panel.clear()
-            play_game(player, entities, game_map, message_log, game_state, root_console, con, panel, constants)
-
-            show_main_menu = True
-
-
 def play_game(player, entities, game_map, message_log, game_state, root_console, con, panel, constants):
     tdl.set_font('arial10x10.png', greyscale=True, altLayout=True)
 
@@ -201,9 +133,8 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     con.clear()
 
                     break
-
-                else:
-                    message_log.add_message(Message('There are no stairs here.', constants['colors'].get('yellow')))
+            else:
+                message_log.add_message(Message('There are no stairs here.', constants['colors'].get('yellow')))
 
         if level_up:
             if level_up == 'hp':
@@ -211,7 +142,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 player.fighter.hp += 20
             elif level_up == 'str':
                 player.fighter.power += 1
-            elif level_up == 'tuf':
+            elif level_up == 'def':
                 player.fighter.defense += 1
 
             game_state = previous_game_state
@@ -296,7 +227,8 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
                 if leveled_up:
                     message_log.add_message(Message(
-                        'You have grown stronger and wiser! You reached level {0}'.format(player.level.current_level) + '!',
+                        'Your battle skills grow stronger! You reached level {0}'.format(
+                            player.level.current_level) + '!',
                         constants['colors'].get('yellow')))
                     previous_game_state = game_state
                     game_state = GameStates.LEVEL_UP
@@ -328,6 +260,74 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                         break
             else:
                 game_state = GameStates.PLAYERS_TURN
+
+def main():
+    constants = get_constants()
+
+    tdl.set_font('arial10x10.png', greyscale=True, altLayout=True)
+
+    root_console = tdl.init(constants['screen_width'], constants['screen_height'], constants['window_title'])
+    con = tdl.Console(constants['screen_width'], constants['screen_height'])
+    panel = tdl.Console(constants['screen_width'], constants['panel_height'])
+
+    player = None
+    entities = []
+    game_map = None
+    message_log = None
+    game_state = None
+
+    show_main_menu = True
+    show_load_error_message = False
+
+    main_menu_background_image = image_load('menu_background.png')
+
+    while not tdl.event.is_window_closed():
+        for event in tdl.event.get():
+            if event.type == 'KEYDOWN':
+                user_input = event
+                break
+        else:
+            user_input = None
+
+        if show_main_menu:
+            main_menu(con, root_console, main_menu_background_image, constants['screen_width'],
+                      constants['screen_height'], constants['colors'])
+
+            if show_load_error_message:
+                message_box(con, root_console, 'No save game to load', 50, constants['screen_width'],
+                            constants['screen_height'])
+
+            tdl.flush()
+
+            action = handle_main_menu(user_input)
+
+            new_game = action.get('new_game')
+            load_saved_game = action.get('load_game')
+            exit_game = action.get('exit')
+
+            if show_load_error_message and (new_game or load_saved_game or exit_game):
+                show_load_error_message = False
+            elif new_game:
+                player, entities, game_map, message_log, game_state = get_game_variables(constants)
+                game_state = GameStates.PLAYERS_TURN
+
+                show_main_menu = False
+            elif load_saved_game:
+                try:
+                    player, entities, game_map, message_log, game_state = load_game()
+                    show_main_menu = False
+                except FileNotFoundError:
+                    show_load_error_message = True
+            elif exit_game:
+                break
+
+        else:
+            root_console.clear()
+            con.clear()
+            panel.clear()
+            play_game(player, entities, game_map, message_log, game_state, root_console, con, panel, constants)
+
+            show_main_menu = True
 
 
 if __name__ == '__main__':
